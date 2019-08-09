@@ -1548,11 +1548,18 @@ talk_topic dialogue::opt( dialogue_window &d_win, const talk_topic &topic )
     apply_speaker_effects( topic );
 
     std::vector<talk_data> response_lines;
+    std::unordered_map<int, talk_response &> response_map;
     for( size_t i = 0; i < responses.size(); i++ ) {
-        response_lines.push_back( responses[i].create_option_line( *this, 'a' + i ) );
+        if( responses[i].success.next_topic.id == "TALK_DONE" ) {
+            response_lines.push_back( responses[i].create_option_line( *this, 'q' ) );
+            response_map.emplace( 'q', responses[i] );
+        } else {
+            response_lines.push_back( responses[i].create_option_line( *this, '1' + i ) );
+            response_map.emplace( '1' + i, responses[i] );
+        }
     }
 
-    int ch = text_only ? 'a' + responses.size() - 1 : ' ';
+    int ch = text_only ? '1' + responses.size() - 1 : ' ';
     bool okay;
     do {
         d_win.refresh_response_display();
@@ -1573,7 +1580,7 @@ talk_topic dialogue::opt( dialogue_window &d_win, const talk_topic &topic )
                 case KEY_PPAGE:
                     continue;
                 default:
-                    ch -= 'a';
+                    ch -= '1';
                     break;
             }
         } while( ( ch < 0 || ch >= static_cast<int>( responses.size() ) ) );
@@ -1587,7 +1594,7 @@ talk_topic dialogue::opt( dialogue_window &d_win, const talk_topic &topic )
     } while( !okay );
     d_win.add_history_separator();
 
-    talk_response chosen = responses[ch];
+    talk_response chosen = response_map.at( ch );
     std::string response_printed = string_format( pgettext( "you say something", "You: %s" ),
                                    response_lines[ch].second.substr( 3 ) );
     d_win.add_to_history( response_printed );
