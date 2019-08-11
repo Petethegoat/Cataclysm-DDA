@@ -1548,14 +1548,14 @@ talk_topic dialogue::opt( dialogue_window &d_win, const talk_topic &topic )
     apply_speaker_effects( topic );
 
     std::vector<talk_data> response_lines;
-    std::unordered_map<int, talk_response &> response_map;
+    std::unordered_map<char, std::pair<talk_response &, talk_data &>> response_map;
     for( size_t i = 0; i < responses.size(); i++ ) {
-        if( responses[i].success.next_topic.id == "TALK_DONE" ) {
+        if( response_map.count( 'q' ) < 1 && responses[i].success.next_topic.id == "TALK_DONE" ) {
             response_lines.push_back( responses[i].create_option_line( *this, 'q' ) );
-            response_map.emplace( 'q', responses[i] );
+            response_map.emplace( 'q', std::pair<talk_response &, talk_data &>( responses[i], response_lines[i] ) );
         } else {
             response_lines.push_back( responses[i].create_option_line( *this, '1' + i ) );
-            response_map.emplace( '1' + i, responses[i] );
+            response_map.emplace( '1' + i, std::pair<talk_response &, talk_data &>( responses[i], response_lines[i] ) );
         }
     }
 
@@ -1580,12 +1580,11 @@ talk_topic dialogue::opt( dialogue_window &d_win, const talk_topic &topic )
                 case KEY_PPAGE:
                     continue;
                 default:
-                    ch -= '1';
                     break;
             }
-        } while( ( ch < 0 || ch >= static_cast<int>( responses.size() ) ) );
+        } while( response_map.count( ch ) < 1 );
         okay = true;
-        std::set<dialogue_consequence> consequences = responses[ch].get_consequences( *this );
+        std::set<dialogue_consequence> consequences = response_map.at( ch ).first.get_consequences( *this );
         if( consequences.count( dialogue_consequence::hostile ) > 0 ) {
             okay = query_yn( _( "You may be attacked! Proceed?" ) );
         } else if( consequences.count( dialogue_consequence::helpless ) > 0 ) {
@@ -1594,9 +1593,11 @@ talk_topic dialogue::opt( dialogue_window &d_win, const talk_topic &topic )
     } while( !okay );
     d_win.add_history_separator();
 
-    talk_response chosen = response_map.at( ch );
+    auto pair = response_map.at(ch);
+    talk_response chosen = pair.first;
+    talk_data talk_line = pair.second;
     std::string response_printed = string_format( pgettext( "you say something", "You: %s" ),
-                                   response_lines[ch].second.substr( 3 ) );
+                                   talk_line.second.substr( 3 ) );
     d_win.add_to_history( response_printed );
 
     if( chosen.mission_selected != nullptr ) {
