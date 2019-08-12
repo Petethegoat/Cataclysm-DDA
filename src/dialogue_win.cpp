@@ -9,12 +9,8 @@
 #include "output.h"
 #include "translations.h"
 
-void dialogue_window::open_dialogue( bool text_only )
+void dialogue_window::open_dialogue()
 {
-    if( text_only ) {
-        this->text_only = true;
-        return;
-    }
     int win_beginy = TERMY > FULL_SCREEN_HEIGHT ? ( TERMY - FULL_SCREEN_HEIGHT ) / 4 : 0;
     int win_beginx = TERMX > FULL_SCREEN_WIDTH ? ( TERMX - FULL_SCREEN_WIDTH ) / 4 : 0;
     int maxy = win_beginy ? TERMY - 2 * win_beginy : FULL_SCREEN_HEIGHT;

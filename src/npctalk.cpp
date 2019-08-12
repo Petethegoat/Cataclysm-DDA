@@ -577,7 +577,7 @@ void npc_chatbin::check_missions()
     ma.erase( last, ma.end() );
 }
 
-void npc::talk_to_u( bool text_only, bool radio_contact )
+void npc::talk_to_u( bool radio_contact )
 {
     if( g->u.is_dead_state() ) {
         set_attitude( NPCATT_NULL );
@@ -700,7 +700,7 @@ void npc::talk_to_u( bool text_only, bool radio_contact )
     decide_needs();
 
     dialogue_window d_win;
-    d_win.open_dialogue( text_only );
+    d_win.open_dialogue();
     // Main dialogue loop
     do {
         d_win.print_header( name );
@@ -1515,7 +1515,6 @@ const talk_topic &special_talk( char ch )
 
 talk_topic dialogue::opt( dialogue_window &d_win, const talk_topic &topic )
 {
-    bool text_only = d_win.text_only;
     std::string challenge = dynamic_line( topic );
     gen_responses( topic );
     // Put quotes around challenge (unless it's an action)
@@ -1548,26 +1547,24 @@ talk_topic dialogue::opt( dialogue_window &d_win, const talk_topic &topic )
     apply_speaker_effects( topic );
 
     std::vector<talk_data> response_lines;
-    std::unordered_map<char, std::pair<talk_response &, talk_data &>> response_map;
+    std::unordered_map<char, std::pair<talk_response &, talk_data>> response_map;
     for( size_t i = 0; i < responses.size(); i++ ) {
         if( response_map.count( 'q' ) < 1 && responses[i].success.next_topic.id == "TALK_DONE" ) {
             response_lines.push_back( responses[i].create_option_line( *this, 'q' ) );
-            response_map.emplace( 'q', std::pair<talk_response &, talk_data &>( responses[i], response_lines[i] ) );
+            response_map.emplace( 'q', std::pair<talk_response &, talk_data>( responses[i], response_lines[i] ) );
         } else {
             response_lines.push_back( responses[i].create_option_line( *this, '1' + i ) );
-            response_map.emplace( '1' + i, std::pair<talk_response &, talk_data &>( responses[i], response_lines[i] ) );
+            response_map.emplace( '1' + i, std::pair<talk_response &, talk_data>( responses[i], response_lines[i] ) );
         }
     }
 
-    int ch = text_only ? '1' + responses.size() - 1 : ' ';
+    int ch = ' ';
     bool okay;
     do {
         d_win.refresh_response_display();
         do {
             d_win.display_responses( hilight_lines, response_lines, ch );
-            if( !text_only ) {
-                ch = inp_mngr.get_input_event().get_first_input();
-            }
+            ch = inp_mngr.get_input_event().get_first_input();
             auto st = special_talk( ch );
             if( st.id != "TALK_NONE" ) {
                 return st;

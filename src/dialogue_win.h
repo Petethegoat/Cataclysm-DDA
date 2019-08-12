@@ -16,7 +16,7 @@ class dialogue_window
 {
     public:
         dialogue_window() = default;
-        void open_dialogue( bool text_only = false );
+        void open_dialogue();
         void print_header( const std::string &name );
 
         bool text_only = false;
