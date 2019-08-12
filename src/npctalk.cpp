@@ -1559,7 +1559,7 @@ talk_topic dialogue::opt( dialogue_window &d_win, const talk_topic &topic )
     }
 
     int ch = ' ';
-    bool okay;
+    bool selection_made = false;
     do {
         d_win.refresh_response_display();
         do {
@@ -1580,14 +1580,14 @@ talk_topic dialogue::opt( dialogue_window &d_win, const talk_topic &topic )
                     break;
             }
         } while( response_map.count( ch ) < 1 );
-        okay = true;
+        selection_made = true;
         std::set<dialogue_consequence> consequences = response_map.at( ch ).first.get_consequences( *this );
         if( consequences.count( dialogue_consequence::hostile ) > 0 ) {
-            okay = query_yn( _( "You may be attacked! Proceed?" ) );
+            selection_made = query_yn( _( "You may be attacked! Proceed?" ) );
         } else if( consequences.count( dialogue_consequence::helpless ) > 0 ) {
-            okay = query_yn( _( "You'll be helpless! Proceed?" ) );
+            selection_made = query_yn( _( "You'll be helpless! Proceed?" ) );
         }
-    } while( !okay );
+    } while( !selection_made);
     d_win.add_history_separator();
 
     auto pair = response_map.at(ch);
