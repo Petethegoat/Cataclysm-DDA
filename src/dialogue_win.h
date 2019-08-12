@@ -19,8 +19,6 @@ class dialogue_window
         void open_dialogue();
         void print_header( const std::string &name );
 
-        bool text_only = false;
-
         void clear_window_texts();
         void display_responses( int hilight_lines, const std::vector<talk_data> &responses,
                                 const int &ch );

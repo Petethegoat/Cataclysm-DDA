@@ -20,9 +20,6 @@ void dialogue_window::open_dialogue()
 
 void dialogue_window::print_header( const std::string &name )
 {
-    if( text_only ) {
-        return;
-    }
     draw_border( d_win );
     int win_midx = getmaxx( d_win ) / 2;
     int winy = getmaxy( d_win );
@@ -36,9 +33,6 @@ void dialogue_window::print_header( const std::string &name )
 
 void dialogue_window::clear_window_texts()
 {
-    if( text_only ) {
-        return;
-    }
     werase( d_win );
     print_header( npc_name );
 }
@@ -58,9 +52,6 @@ void dialogue_window::add_history_separator()
 
 void dialogue_window::print_history( const size_t hilight_lines )
 {
-    if( text_only ) {
-        return;
-    }
     int curline = getmaxy( d_win ) - 2;
     int curindex = history.size() - 1;
     // index of the first line that is highlighted
@@ -84,9 +75,6 @@ static int RESPONSE_AREA_HEIGHT( int win_height )
 
 bool dialogue_window::print_responses( const int yoffset, const std::vector<talk_data> &responses )
 {
-    if( text_only ) {
-        return false;
-    }
     // Responses go on the right side of the window, add 2 for spacing
     const size_t xoffset = getmaxx( d_win ) / 2 + 2;
     // First line we can print to, +2 for borders, +1 for the header.
@@ -130,9 +118,6 @@ void dialogue_window::display_responses( const int hilight_lines,
         const std::vector<talk_data> &responses,
         const int &ch )
 {
-    if( text_only ) {
-        return;
-    }
 #if defined(__ANDROID__)
     input_context ctxt( "DIALOGUE_CHOOSE_RESPONSE" );
     for( size_t i = 0; i < responses.size(); i++ ) {
