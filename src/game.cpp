@@ -1424,7 +1424,6 @@ bool game::do_turn()
     reset_light_level();
 
     perhaps_add_random_npc();
-    process_activity();
     // Process NPC sound events before they move or they hear themselves talking
     for( npc &guy : all_npcs() ) {
         if( rl_dist( guy.pos(), u.pos() ) < MAX_VIEW_DISTANCE ) {
@@ -1454,7 +1453,7 @@ bool game::do_turn()
                     draw();
                 }
 
-                if( handle_action() ) {
+                if( !u.activity && handle_action() ) {
                     ++moves_since_last_save;
                     u.action_taken();
                 }
@@ -1466,6 +1465,7 @@ bool game::do_turn()
                 if( uquit == QUIT_WATCH ) {
                     break;
                 }
+
                 if( u.activity ) {
                     process_activity();
                 }
@@ -1473,30 +1473,29 @@ bool game::do_turn()
             // Reset displayed sound markers now that the turn is over.
             // We only want this to happen if the player had a chance to examine the sounds.
             sounds::reset_markers();
-        } else {
-            // Rate limit key polling to 10 times a second.
-            static auto start = std::chrono::time_point_cast<std::chrono::milliseconds>(
-                                    std::chrono::system_clock::now() );
-            const auto now = std::chrono::time_point_cast<std::chrono::milliseconds>(
-                                 std::chrono::system_clock::now() );
-            if( ( now - start ).count() > 100 ) {
-                handle_key_blocking_activity();
-                start = now;
-            }
+        }
 
-            // If player is performing a task and a monster is dangerously close, warn them
-            // regardless of previous safemode warnings
-            if( u.activity && !u.has_activity( activity_id( "ACT_AIM" ) ) &&
-                u.activity.moves_left > 0 &&
-                !u.activity.is_distraction_ignored( distraction_type::hostile_spotted ) ) {
-                Creature *hostile_critter = is_hostile_very_close();
-                if( hostile_critter != nullptr ) {
-                    cancel_activity_or_ignore_query( distraction_type::hostile_spotted,
-                                                     string_format( _( "The %s is dangerously close!" ),
-                                                             hostile_critter->get_name() ) );
-                }
-            }
+        // Rate limit key polling to 10 times a second.
+        static auto start = std::chrono::time_point_cast<std::chrono::milliseconds>(
+                                std::chrono::system_clock::now() );
+        const auto now = std::chrono::time_point_cast<std::chrono::milliseconds>(
+                             std::chrono::system_clock::now() );
+        if( ( now - start ).count() > 100 ) {
+            handle_key_blocking_activity();
+            start = now;
+        }
 
+        // If player is performing a task and a monster is dangerously close, warn them
+        // regardless of previous safemode warnings
+        if( u.activity && !u.has_activity( activity_id( "ACT_AIM" ) ) &&
+            u.activity.moves_left > 0 &&
+            !u.activity.is_distraction_ignored( distraction_type::hostile_spotted ) ) {
+            Creature *hostile_critter = is_hostile_very_close();
+            if( hostile_critter != nullptr ) {
+                cancel_activity_or_ignore_query( distraction_type::hostile_spotted,
+                                                 string_format( _( "The %s is dangerously close!" ),
+                                                         hostile_critter->get_name() ) );
+            }
         }
     }
 
